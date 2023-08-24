@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const path = require("path");
 const webpack = require("webpack");
 
@@ -24,13 +25,17 @@ module.exports = {
     isDevelopment && new ReactRefreshWebpackPlugin(),
   ],
   resolve: {
-    modules: [__dirname, "src", "node_modules"],
+    plugins: [new TsconfigPathsPlugin()],
+    modules: [path.resolve(__dirname, './src'), 'node_modules'],
     extensions: ["*", ".js", ".jsx", ".tsx", ".ts"],
+    alias: {
+      src: path.resolve(__dirname, 'src/'),
+    },
   },
   module: {
     rules: [
       {
-        test: /\.ts$|tsx/,
+        test: /\.ts|tsx|js$/,
         exclude: /node_modules/,
         loader: require.resolve("babel-loader"),
         options: {

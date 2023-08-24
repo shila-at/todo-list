@@ -15,8 +15,10 @@
         "skipLibCheck": true ,
         "forceConsistentCasingInFileNames": true ,
         "resolveJsonModule": true,
+        "baseUrl": ".",
+        "rootDir": ".",
         "paths": {
-            "@*": ["./*"]
+            "@*": ["./src/*"]
           }
     },
     "include": [
