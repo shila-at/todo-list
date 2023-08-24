@@ -1,10 +1,11 @@
-import React from "react";
+import TodoList from "@container/todoList";
+import "@assets/style/global.css";
 
 const App = () => {
   return (
-    <div>
-      
-    </div>
+    <>
+      <TodoList />
+    </>
   );
 };
 export default App;

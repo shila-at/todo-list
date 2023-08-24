@@ -1,0 +1,6 @@
+@import url('./fontInter.css');
+
+*{
+    font-family: Inter !important;
+    box-sizing: border-box;
+}
