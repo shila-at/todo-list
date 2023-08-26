@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { toast } from "react-toastify";
 
 export type Item = {
   id: number;
@@ -58,6 +59,7 @@ const TodoListContextProvider: FC<PropsWithChildren> = ({ children }) => {
     const newList = [...todoListData.filter((el: Item) => el.id !== item.id)];
     setTodoListData(newList);
     localStorage.setItem("todoListData", JSON.stringify(newList));
+    toast.success("Removed successfully!");
   };
 
   const editListItem = (item: Item) => {
@@ -73,8 +75,9 @@ const TodoListContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setTodoListData(editedList);
 
       localStorage.setItem("todoListData", JSON.stringify(editedList));
+      toast.success("done successfully!");
     } else {
-      alert("item is exist");
+      toast.error("item is exist!");
     }
   };
   return (
