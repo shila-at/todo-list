@@ -18,4 +18,6 @@ export const colorPalette = {
   gold10: "#FFFBF2",
   //Black
   black50: "#3A3A3A",
+  //white
+  white:"#FFFFFF"
 };

@@ -15,6 +15,8 @@ export type Item = {
 
 type TodoListContextType = {
   todoListData: Item[];
+  draggedItem: any;
+  setDraggedItem: (item: Item) => void;
   addList: (item: Item) => void;
   removeList: (item: Item) => void;
   editListItem: (item: Item) => void;
@@ -22,6 +24,8 @@ type TodoListContextType = {
 
 export const TodoListContext = createContext<TodoListContextType>({
   todoListData: [],
+  draggedItem: undefined,
+  setDraggedItem: () => {},
   addList: () => {},
   removeList: () => {},
   editListItem: () => {},
@@ -29,6 +33,7 @@ export const TodoListContext = createContext<TodoListContextType>({
 
 const TodoListContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [todoListData, setTodoListData] = useState<Item[]>([]);
+  const [draggedItem, setDraggedItem] = useState<any>(undefined);
 
   useEffect(() => {
     const localData =
@@ -45,34 +50,43 @@ const TodoListContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [localStorage]);
 
   const addList = (item: Item) => {
-    if (
-      !todoListData.some(
-        (el: Item) => el.desc === item.desc && el.type === item.type
-      )
-    ) {
-      setTodoListData((prev) => [...prev, item]);
-      localStorage.setItem("todoListData", JSON.stringify(todoListData));
-    } else {
-      alert("item is exist");
-    }
+    setTodoListData((prev) => [...prev, item]);
+    localStorage.setItem("todoListData", JSON.stringify(todoListData));
   };
+
   const removeList = (item: Item) => {
     const newList = [...todoListData.filter((el: Item) => el.id !== item.id)];
     setTodoListData(newList);
     localStorage.setItem("todoListData", JSON.stringify(newList));
   };
-  const editListItem = (item: Item) => {
-    const editedList = [
-      ...todoListData.filter((el: Item) => el.id !== item.id),
-      item,
-    ];
-    setTodoListData(editedList);
 
-    localStorage.setItem("todoListData", JSON.stringify(editedList));
+  const editListItem = (item: Item) => {
+    if (
+      !todoListData.some(
+        (el: Item) => el.desc === item.desc && el.type === item.type
+      )
+    ) {
+      const editedList = [
+        ...todoListData.filter((el: Item) => el.id !== item.id),
+        item,
+      ];
+      setTodoListData(editedList);
+
+      localStorage.setItem("todoListData", JSON.stringify(editedList));
+    } else {
+      alert("item is exist");
+    }
   };
   return (
     <TodoListContext.Provider
-      value={{ todoListData, addList, removeList, editListItem }}
+      value={{
+        todoListData,
+        draggedItem,
+        setDraggedItem,
+        addList,
+        removeList,
+        editListItem,
+      }}
     >
       {children}
     </TodoListContext.Provider>
