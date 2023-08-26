@@ -18,7 +18,7 @@ type TodoListContextType = {
   todoListData: Item[];
   draggedItem: any;
   setDraggedItem: (item: Item) => void;
-  addList: (item: Item) => void;
+  addList: (item: Item | Item[]) => void;
   removeList: (item: Item) => void;
   editListItem: (item: Item) => void;
 };
@@ -50,36 +50,36 @@ const TodoListContextProvider: FC<PropsWithChildren> = ({ children }) => {
     );
   }, [localStorage]);
 
-  const addList = (item: Item) => {
-    setTodoListData((prev) => [...prev, item]);
-    localStorage.setItem("todoListData", JSON.stringify(todoListData));
+  const addList = (item: Item | Item[]) => {
+
+    const newList = Array.isArray(item)
+      ? [...todoListData, ...item]
+      : [...todoListData, item];
+
+    setTodoListData([...newList]);
+    localStorage.setItem("todoListData", JSON.stringify(newList));
   };
 
   const removeList = (item: Item) => {
-    const newList = [...todoListData.filter((el: Item) => el.id !== item.id)];
+    const newList = [
+      ...todoListData.filter((el: Item) => el.id !== item.id),
+    ].map((el: Item, index: number) => ({ ...el, id: index + 1 }));
     setTodoListData(newList);
     localStorage.setItem("todoListData", JSON.stringify(newList));
     toast.success("Removed successfully!");
   };
 
   const editListItem = (item: Item) => {
-    if (
-      !todoListData.some(
-        (el: Item) => el.desc === item.desc && el.type === item.type
-      )
-    ) {
-      const editedList = [
-        ...todoListData.filter((el: Item) => el.id !== item.id),
-        item,
-      ];
-      setTodoListData(editedList);
+    const editedList = todoListData;
+    const itemIndex = editedList.findIndex((el: Item) => el.id === item.id);
+    editedList[itemIndex].desc = item.desc;
+    editedList[itemIndex].type = item.type;
 
-      localStorage.setItem("todoListData", JSON.stringify(editedList));
-      toast.success("done successfully!");
-    } else {
-      toast.error("item is exist!");
-    }
+    setTodoListData([...editedList]);
+
+    localStorage.setItem("todoListData", JSON.stringify(editedList));
   };
+
   return (
     <TodoListContext.Provider
       value={{

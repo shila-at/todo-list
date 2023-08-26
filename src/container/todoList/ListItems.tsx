@@ -1,14 +1,15 @@
 import { useState } from "react";
 
+import { Draggable, Droppable } from "react-beautiful-dnd";
 import { Item, useTodoListContext } from "@provider/TodoListContextProvider";
 import { UtilsHelper } from "@utils/UtilsHelper";
+import { colorPalette } from "@uiKits/colors/Color";
 import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import InputBase from "@mui/material/InputBase";
 import PlusIcon from "@assets/icons/PlusIcon";
-import { colorPalette } from "@uiKits/colors/Color";
-import { Draggable, Droppable } from "react-beautiful-dnd";
+
 
 type ListItem = {
   type: "Todo" | "Doing" | "Done";
@@ -16,31 +17,23 @@ type ListItem = {
   data: any[];
 };
 const ListItems = ({ title, type, data }: ListItem) => {
-  const [value, setValue] = useState<string | string[]>("");
 
   const { addList, removeList, editListItem, todoListData, setDraggedItem } =
     useTodoListContext();
 
-  const editItem = (e: any, item: Item) => {
-    if (e.key === "Enter") {
-      console.log({ value });
-      if (Array.isArray(value)) {
-        handlePast(item);
-      } else {
-        editListItem({ id: item.id, desc: value, type: item.type });
-      }
-    }
-  };
-
-  const handlePast = (item: Item) => {
+  const handlePaste = (value: string[], item: Item) => {
+    const newItems: Item[] = [];
     if (Array.isArray(value) && value.length > 0) {
       value.forEach((el: string, idx: number) => {
-        if (idx === 0) {
-          editListItem({ id: item.id, desc: el, type: item.type });
-        } else {
-          addList({ id: todoListData.length + 1, desc: el, type });
+        if (!!el && el.length > 0) {
+          if (idx === 0) {
+            editListItem({ id: item.id, desc: el, type: item.type });
+          } else {
+            newItems.push({ id: todoListData.length + idx, desc: el, type });
+          }
         }
       });
+      addList(newItems);
     }
   };
   const chechedItem = (checked: boolean, el: Item) => {
@@ -48,19 +41,16 @@ const ListItems = ({ title, type, data }: ListItem) => {
       setTimeout(() => {
         switch (el.type) {
           case UtilsHelper.ListType[0].name:
-            console.log(checked, el.type, "111");
             editListItem({ id: el.id, desc: el.desc, type: "Doing" });
             break;
           case UtilsHelper.ListType[1].name:
-            console.log(checked, el.type, "222");
             editListItem({ id: el.id, desc: el.desc, type: "Done" });
             break;
           default:
             break;
         }
-      }, 1000);
+      }, 3000);
     } else {
-      console.log(checked, el.type);
       setTimeout(() => {
         switch (el.type) {
           case UtilsHelper.ListType[1].name:
@@ -72,7 +62,7 @@ const ListItems = ({ title, type, data }: ListItem) => {
           default:
             break;
         }
-      }, 1000);
+      }, 3000);
     }
   };
 
@@ -112,132 +102,125 @@ const ListItems = ({ title, type, data }: ListItem) => {
               {data.length > 0 ? (
                 data.map((el: Item, idx) => {
                   return (
-                    <>
-                      <Draggable
-                        key={el.id}
-                        draggableId={`${el.id}`}
-                        index={idx}
-                      >
-                        {(provided, dropSnapshot) => {
-                          if (dropSnapshot.isDragging) {
-                            setDraggedItem(el);
-                          }
+                    <Draggable key={el.id} draggableId={`${el.id}`} index={idx}>
+                      {(provided, dropSnapshot) => {
+                        if (dropSnapshot.isDragging) {
+                          setDraggedItem(el);
+                        }
 
-                          return (
-                            <>
-                              <Paper
-                                elevation={0}
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  padding: "12px",
-                                  backgroundColor: "white",
-                                  borderRadius: "4px",
-                                  height: "48px",
-                                  gap: "10px",
-                                  border: `1px solid ${
-                                    UtilsHelper.renderItemColors(type)
-                                      .borderColor
-                                  }`,
-                                  boxShadow: dropSnapshot.isDragging
-                                    ? "0 5px 10px rgba(0, 0, 0, 0.6)"
-                                    : "unset",
-                                  outlineColor: dropSnapshot.isDragging
-                                    ? "card-border"
-                                    : "transparent",
-                                }}
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                              >
-                                {!!el.desc && (
-                                  <input
-                                    type="checkbox"
-                                    defaultChecked={
-                                      el.type === UtilsHelper.ListType[2].name
-                                    }
-                                    onChange={(e) =>
-                                      chechedItem(e.target.checked, el)
-                                    }
-                                    style={{
-                                      width: "16px",
-                                      height: "16px",
-                                      border: `1px solid ${
-                                        UtilsHelper.renderItemColors(type)
-                                          .borderColor
-                                      }`,
-                                    }}
-                                  />
-                                )}
-                                <InputBase
-                                  defaultValue={el.desc}
-                                  onChange={(e) => setValue(e.target.value)}
-                                  onPaste={(e) => {
-                                    console.log(
-                                      e.clipboardData
-                                        .getData("text/Plain")
-                                        .split("\n")
-                                    );
-                                  }}
-                                  onKeyDown={(e) => editItem(e, el)}
-                                  sx={{
-                                    fontSize: "12px",
-                                    fontWeight: 600,
-                                    color: colorPalette.black50,
-                                    flex: 1,
-                                    p: 0,
-                                    height: "100%",
-                                    textDecoration:
-                                      el.type === UtilsHelper.ListType[2].name
-                                        ? "line-through"
-                                        : "",
-                                  }}
-                                />
-                                <Stack
-                                  onClick={() => removeList(el)}
-                                  sx={{
-                                    transform: "rotate(45deg)",
-                                    cursor: "pointer",
-                                    opacity: 0,
-                                    ":hover": {
-                                      opacity: 1,
-                                    },
-                                  }}
-                                >
-                                  <PlusIcon
-                                    fill={
+                        return (
+                          <>
+                            <Paper
+                              elevation={0}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                padding: "12px",
+                                backgroundColor: "white",
+                                borderRadius: "4px",
+                                minHeight: "48px",
+                                gap: "10px",
+                                border: `1px solid ${
+                                  UtilsHelper.renderItemColors(type).borderColor
+                                }`,
+                                boxShadow: dropSnapshot.isDragging
+                                  ? "0 5px 10px rgba(0, 0, 0, 0.6)"
+                                  : "unset",
+                                outlineColor: dropSnapshot.isDragging
+                                  ? "card-border"
+                                  : "transparent",
+                              }}
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                            >
+                              {!!el.desc && (
+                                <input
+                                  type="checkbox"
+                                  defaultChecked={
+                                    el.type === UtilsHelper.ListType[2].name
+                                  }
+                                  onChange={(e) =>
+                                    chechedItem(e.target.checked, el)
+                                  }
+                                  style={{
+                                    width: "16px",
+                                    height: "16px",
+                                    border: `1px solid ${
                                       UtilsHelper.renderItemColors(type)
-                                        .newTextColor
-                                    }
-                                  />
-                                </Stack>
-                              </Paper>
-                              {dropSnapshot.isDragging && (
-                                <Stack
-                                  width="100%"
-                                  height="48px"
-                                  bgcolor={colorPalette.white}
-                                  border={`1px dashed ${
-                                    UtilsHelper.renderItemColors(type)
-                                      .borderColor
-                                  }`}
+                                        .borderColor
+                                    }`,
+                                  }}
                                 />
                               )}
-                            </>
-                          );
-                        }}
-                      </Draggable>
-                      {snapshot.isDraggingOver && (
-                        <Stack
-                          width="100%"
-                          height="48px"
-                          bgcolor={colorPalette.white}
-                          border={`1px dashed ${
-                            UtilsHelper.renderItemColors(type).borderColor
-                          }`}
-                        />
-                      )}
-                    </>
+                              <InputBase
+                                multiline
+                                defaultValue={el.desc}
+                                onChange={(e) =>
+                                  editListItem({
+                                    id: el.id,
+                                    desc: e.target.value,
+                                    type: el.type,
+                                  })
+                                }
+                                onPaste={(e) => {
+                                  e.preventDefault();
+                                  handlePaste(
+                                    e.clipboardData
+                                      .getData("text/Plain")
+                                      .split(/\r\n|\r|\n/g)
+                                      .filter(
+                                        (line: string) => line.length > 0
+                                      ),
+                                    el
+                                  );
+                                }}
+                                sx={{
+                                  fontSize: "12px",
+                                  fontWeight: 600,
+                                  color: colorPalette.black50,
+                                  flex: 1,
+                                  p: 0,
+                                  height: "100%",
+                                  textDecoration:
+                                    el.type === UtilsHelper.ListType[2].name
+                                      ? "line-through"
+                                      : "",
+                                }}
+                              />
+                              <Stack
+                                onClick={() => removeList(el)}
+                                sx={{
+                                  transform: "rotate(45deg)",
+                                  cursor: "pointer",
+                                  opacity: 0,
+                                  ":hover": {
+                                    opacity: 1,
+                                  },
+                                }}
+                              >
+                                <PlusIcon
+                                  fill={
+                                    UtilsHelper.renderItemColors(type)
+                                      .newTextColor
+                                  }
+                                />
+                              </Stack>
+                            </Paper>
+                            {dropSnapshot.isDragging && (
+                              <Stack
+                                width="100%"
+                                height="48px"
+                                bgcolor={colorPalette.white}
+                                border={`1px dashed ${
+                                  UtilsHelper.renderItemColors(type).borderColor
+                                }`}
+                              />
+                            )}
+                          </>
+                        );
+                      }}
+                    </Draggable>
                   );
                 })
               ) : (
@@ -250,6 +233,16 @@ const ListItems = ({ title, type, data }: ListItem) => {
                   List is Empty
                 </Typography>
               )}
+              {snapshot.isDraggingOver && (
+                <Stack
+                  width="100%"
+                  height="48px"
+                  bgcolor={colorPalette.white}
+                  border={`1px dashed ${
+                    UtilsHelper.renderItemColors(type).borderColor
+                  }`}
+                />
+              )}
             </Stack>
           )}
         </Droppable>
@@ -258,6 +251,7 @@ const ListItems = ({ title, type, data }: ListItem) => {
             onClick={() =>
               addList({ id: todoListData.length + 1, desc: "", type })
             }
+            width="fit-content"
             flexDirection="row"
             alignItems="center"
             gap="10px"
